@@ -4,7 +4,7 @@ using System.Threading;
 using System.IO.Ports;
 using System.IO;
 using System.Linq;
-
+ 
 namespace EfosMon {
     class EFOSpoller : IDisposable {
 
