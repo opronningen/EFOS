@@ -4,7 +4,9 @@ using System.Threading;
 using System.IO.Ports;
 using System.IO;
 using System.Linq;
- 
+using IniParser;
+using IniParser.Model;
+
 namespace EfosMon {
     class EFOSpoller : IDisposable {
 
@@ -178,7 +180,9 @@ namespace EfosMon {
             //if (!File.Exists(logfilename));  // Todo Returns false even when file exist.
             //    writeHeaders = false;
 
-            StreamWriter log = new StreamWriter(logfilename, true, Encoding.ASCII);
+            var logf = File.Open(logfilename, FileMode.Append, FileAccess.Write, FileShare.Read);
+            StreamWriter log = new StreamWriter(logf, Encoding.ASCII);
+            
             log.AutoFlush = true;
 
             if (writeHeaders) {
@@ -204,7 +208,7 @@ namespace EfosMon {
         StreamWriter log;
         uint flushCounter = 30;     // 5-minute intervals
 
-        SerialPort efos = new SerialPort("com3");
+        SerialPort efos;
 
         // Represent the current logfile
         DateTime logfiledate;
@@ -286,12 +290,12 @@ namespace EfosMon {
             }
         }
 
-        public EFOSpoller() {
-            efos.BaudRate = 9600;
+        private bool disposed = false;
+
+        public EFOSpoller(string comPort) {
+            efos = new SerialPort(comPort, 9600);
             efos.Open();
         }
-
-        private bool disposed = false;
 
         public void Dispose() {
             if (disposed)
@@ -315,29 +319,21 @@ namespace EfosMon {
 
         static public AutoResetEvent done = new AutoResetEvent(false);
 
-        static EFOSpoller poller = new EFOSpoller();
+        static EFOSpoller poller;
 
         static Timer timer;
 
         static void Main(string[] args) {
-            // For registry access
-            const string userRoot = "HKEY_CURRENT_USER";
-            const string subkey = "EFOSView\\";
-            const string keyName = userRoot + "\\" + subkey;
-            string value = "LogPath";
-
             Console.CancelKeyPress += Console_CancelKeyPress;
 
-            // Get  directory from args, if any
-            string logPath;
-            if(args.Count() > 0) {
-                logPath = args[0];
+            // Read ini-file
+            var parser = new FileIniDataParser();
+            IniData iniData = parser.ReadFile("EFOS.ini");
 
-                if (Directory.Exists(logPath)) 
-                    Microsoft.Win32.Registry.SetValue(keyName, value, logPath);
-            } else {
-                logPath = (string)Microsoft.Win32.Registry.GetValue(keyName, value, "");
-            }
+            string com = iniData["EfosMon"]["com-port"];
+            string logPath = iniData["EfosMon"]["data-path"];
+
+            poller = new EFOSpoller(com);
 
             if (!Directory.Exists(logPath)) {
                 Console.Error.WriteLine("Error! Could not open LogDirectory {0}. Using .\\", logPath);
