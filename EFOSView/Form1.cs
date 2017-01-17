@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.IO;
+using IniParser;
+using IniParser.Model;
 
 namespace EFOSView {
     public partial class MainForm : Form {
@@ -30,6 +29,7 @@ namespace EFOSView {
 
         private string logPath;
         private string plotPath;
+        private bool exportPlots = false;
 
         public MainForm() {
             InitializeComponent();
@@ -75,55 +75,20 @@ namespace EFOSView {
 
             statusLabel.Text = string.Format("Updated {0}", DateTime.Now.ToLongTimeString());
 
-            // Get log-folder from registry, or ask for folder
-            const string userRoot = "HKEY_CURRENT_USER";
-            const string subkey = "EFOSView";
-            const string keyName = userRoot + "\\" + subkey;
-            string value = "LogPath";
-            logPath = (string)Microsoft.Win32.Registry.GetValue(keyName, value, "");
-
-            if (logPath == null || logPath == "" || !Directory.Exists(logPath)) {
-                folderBrowserDialog1.Description = "Select Log-directory";
-                if (folderBrowserDialog1.ShowDialog() == DialogResult.OK) {
-                    logPath = folderBrowserDialog1.SelectedPath;
-                }
-
-                // TO-DO what if user cancels
-
-                Microsoft.Win32.Registry.SetValue(keyName, value, logPath);
-            }
-
-            // Get plot-folder
-            value = "PlotPath";
-            plotPath = (string)Microsoft.Win32.Registry.GetValue(keyName, value, "");
-
-            if (plotPath == null || plotPath == "" || !Directory.Exists(plotPath)) {
-                folderBrowserDialog1.Description = "Select Plot-directory";
-                if (folderBrowserDialog1.ShowDialog() == DialogResult.OK) {
-                    plotPath = folderBrowserDialog1.SelectedPath;
-                }
-
-                // TO-DO what if user cancels
-
-                Microsoft.Win32.Registry.SetValue(keyName, value, plotPath);
-            }
+            var parser = new FileIniDataParser();
+            IniData iniData = parser.ReadFile("EFOS.ini");
+            plotPath = iniData["EfosView"]["plot-path"];
+            logPath = iniData["EfosMon"]["data-path"];
+            exportPlots = bool.Parse(iniData["EfosView"]["export-plots"]);
 
             d = new DataLoader(logPath);
 
             // Run exportcharts in the background
-            Task.Run(() => ExportCharts());
+            if (exportPlots) {
+                Task.Run(() => ExportCharts());
 
-            // Wait untill ExportCharts has copied the charts
-            doneCopyingCharts.WaitOne();
-
-            // Read timespan from Registry
-            value = "Span";
-            span = (int)Microsoft.Win32.Registry.GetValue(keyName, value, -1);
-
-            if (span < 1) {
-                span = 24;
-
-                Microsoft.Win32.Registry.SetValue(keyName, value, span);
+                // Wait untill ExportCharts has copied the charts
+                doneCopyingCharts.WaitOne();
             }
 
             var data = GetData(DateTime.Now.AddHours(-span), DateTime.Now, true);
@@ -313,7 +278,9 @@ namespace EFOSView {
             });
 
             // Run exportcharts in the background
-            Task.Run(() => ExportCharts());
+            if (exportPlots) {
+                Task.Run(() => ExportCharts());
+            }
         }
 
         /*
@@ -508,9 +475,6 @@ namespace EFOSView {
             //        span = 1;
             //        break;
             //}
-
-            // Write new value to registry
-            Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\EFOSView", "Span", span);
 
             // bind new data..
             var data = GetData(DateTime.Now.AddHours(-span), DateTime.Now, true);

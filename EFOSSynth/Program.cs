@@ -5,15 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.IO;
+using IniParser;
+using IniParser.Model;
 
 namespace EFOSSynth
 {
     class Program
     {
-        static SerialPort efos = new SerialPort("com2", 9600);
+        
         static void Main(string[] args)
         {
-            
+            // Read ini-file
+            var parser = new FileIniDataParser();
+            IniData iniData = parser.ReadFile("EFOS.ini");
+
+            string com = iniData["EfosSynth"]["com-port"];
+
+            SerialPort efos = new SerialPort(com, 9600);
+
             int curPos = 32;            // Cursor-position
             const int minCurPos = 25;   // "Left-most" valid position
             const int maxCurPos = 32;   // Right-most valid postion
@@ -90,8 +99,6 @@ namespace EFOSSynth
 
                 digits = readBuffer.ToCharArray();
             }
-
-            Console.CancelKeyPress += Console_CancelKeyPress;
 
             int index;
             char digit;
@@ -173,10 +180,6 @@ namespace EFOSSynth
 
                 efos.Close();
             }
-        }
-
-        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
-            efos.Close();
         }
     }
 }
