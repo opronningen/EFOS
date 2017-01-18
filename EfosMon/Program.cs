@@ -8,6 +8,7 @@ using IniParser;
 using IniParser.Model;
 
 namespace EfosMon {
+    
     class EFOSpoller : IDisposable {
 
         #region Defs
@@ -206,6 +207,8 @@ namespace EfosMon {
         bool[] parseErrors = new bool[queries.Length];  // Flag parse errors
 
         StreamWriter log;
+        StreamWriter errlog = new StreamWriter("EfosMon.log");
+
         uint flushCounter = 30;     // 5-minute intervals
 
         SerialPort efos;
@@ -218,25 +221,25 @@ namespace EfosMon {
         public static object executionLock = new object();
 
         public void Poll(Object stateInfo) {
+            string readBuffer;
+            string value;
 
             if (++secs >= pollInterval) {
                 lock (executionLock) {
                     secs = 0;
-
-                    string s;
-
+                    
                     for (int i = 0; i < queries.Length; i++) {
 
                         efos.Write(queries[i]);
-                        s = efos.ReadLine().Trim();
-                        s = (string)s.Substring(3); // Skip echoed query
+                        readBuffer = efos.ReadLine().Trim();
+                        value = (string)readBuffer.Substring(3); // Skip echoed query
 
                         parseErrors[i] = false;
 
                         double val;
 
                         try {
-                            val = (double)int.Parse(s, System.Globalization.NumberStyles.HexNumber);
+                            val = (double)int.Parse(value, System.Globalization.NumberStyles.HexNumber);
 
                             if (i < 30)
                                 val -= 128;
@@ -246,6 +249,7 @@ namespace EfosMon {
 
                             values[i] = val;
                         } catch (Exception) {
+                            errlog.WriteLine("Parse error {0}. Sent {1}, received {2}", names[i], queries[i], readBuffer);
 
                             // Leave old value unchanged, flag error on console
                             parseErrors[i] = true;
@@ -295,6 +299,8 @@ namespace EfosMon {
         public EFOSpoller(string comPort) {
             efos = new SerialPort(comPort, 9600);
             efos.Open();
+
+            errlog.AutoFlush = true;
         }
 
         public void Dispose() {
@@ -334,7 +340,7 @@ namespace EfosMon {
             string logPath = iniData["EfosMon"]["data-path"];
 
             poller = new EFOSpoller(com);
-
+            
             if (!Directory.Exists(logPath)) {
                 Console.Error.WriteLine("Error! Could not open LogDirectory {0}. Using .\\", logPath);
             }else {
