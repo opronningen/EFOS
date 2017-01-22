@@ -249,7 +249,7 @@ namespace EfosMon {
 
                             values[i] = val;
                         } catch (Exception) {
-                            errlog.WriteLine("Parse error {0}. Sent {1}, received {2}", names[i], queries[i], readBuffer);
+                            errlog.WriteLine("{0} Parse error {1}: Sent {2}, received {3}", DateTime.Now, names[i].Trim(), queries[i], readBuffer);
 
                             // Leave old value unchanged, flag error on console
                             parseErrors[i] = true;
