@@ -10,7 +10,7 @@ using IniParser.Model;
 
 namespace EFOSSynth
 {
-    class Program
+    class EFOSSynth
     {
         
         static void Main(string[] args)
@@ -123,7 +123,6 @@ namespace EFOSSynth
                         digits[index] = digit;
 
                         Console.Write(digit);
-                        Console.SetCursorPosition(curPos, 1);
                         ShowFrqOffset();
                         break;
 
@@ -137,7 +136,6 @@ namespace EFOSSynth
                         digits[index] = digit;
 
                         Console.Write(digit);
-                        Console.SetCursorPosition(curPos, 1);
                         ShowFrqOffset();
                         break;
 

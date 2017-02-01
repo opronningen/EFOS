@@ -208,7 +208,7 @@ namespace EfosMon {
 
         StreamWriter log;
         StreamWriter errlog = new StreamWriter("EfosMon.log");
-
+        
         uint flushCounter = 30;     // 5-minute intervals
 
         SerialPort efos;
@@ -321,7 +321,7 @@ namespace EfosMon {
         }
     }
 
-    class Program {
+    class EFOSMon {
 
         static public AutoResetEvent done = new AutoResetEvent(false);
 
