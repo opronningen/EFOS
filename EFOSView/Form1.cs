@@ -30,6 +30,7 @@ namespace EFOSView {
         private string logPath;
         private string plotPath;
         private bool exportPlots = false;
+        private bool exportHistoricPlots = false;
 
         public MainForm() {
             InitializeComponent();
@@ -80,6 +81,7 @@ namespace EFOSView {
             plotPath = iniData["EfosView"]["plot-path"];
             logPath = iniData["EfosMon"]["data-path"];
             exportPlots = bool.Parse(iniData["EfosView"]["export-plots"]);
+            exportHistoricPlots = bool.Parse(iniData["EfosView"]["export-historic-plots"]);
 
             d = new DataLoader(logPath);
 

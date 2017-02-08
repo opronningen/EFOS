@@ -54,83 +54,88 @@ namespace EFOSView {
             if (exportCharts.Count == 0)
                 CopyCharts();
 
-            DateTime startTime = d.GetFirstDate();
-            //DateTime stopTime = DateTime.Now;
-            DateTime stopTime = new DateTime(startTime.Year, startTime.Month + 1, 1, 0, 0, 0); // Should be 00:00:00 day 1 of next month
-
-            // Monthly plots
+            DateTime startTime;
+            DateTime stopTime;
             List<EFOSDataPoint> data;
-            while(stopTime < DateTime.Now) {
-                data = null;
 
-                foreach (Chart c in exportCharts) {
-                    string fname = String.Format("Monthly {0} {1} {2}.png", c.Titles[0].Text, startTime.Year, startTime.Month);
-                    string fullPath = Path.Combine(plotPath, fname);
+            if (exportHistoricPlots) {
+                startTime = d.GetFirstDate();
+                stopTime = new DateTime(startTime.Year, startTime.Month + 1, 1, 0, 0, 0); // Should be 00:00:00 day 1 of next month
 
-                    if (File.Exists(fullPath))
-                        continue;
+                // Monthly plots
+                
+                while (stopTime < DateTime.Now) {
+                    data = null;
 
-                    if (data == null)
-                        data = GetData(startTime, stopTime, true, true);
+                    foreach (Chart c in exportCharts) {
+                        string fname = String.Format("Monthly {0} {1} {2}.png", c.Titles[0].Text, startTime.Year, startTime.Month);
+                        string fullPath = Path.Combine(plotPath, fname);
 
-                    BindChart(data, c, true, false);
-                    c.SaveImage(fullPath, ChartImageFormat.Png);
+                        if (File.Exists(fullPath))
+                            continue;
+
+                        if (data == null)
+                            data = GetData(startTime, stopTime, true, true);
+
+                        BindChart(data, c, true, false);
+                        c.SaveImage(fullPath, ChartImageFormat.Png);
+                    }
+
+                    startTime = stopTime;
+                    stopTime = stopTime.AddMonths(1);
                 }
 
-                startTime = stopTime;
-                stopTime = stopTime.AddMonths(1);
-            }
+                // Weekly plots
+                GregorianCalendar cal = new GregorianCalendar();
 
-            // Weekly plots
-            GregorianCalendar cal = new GregorianCalendar();
+                startTime = d.GetFirstDate();
+                startTime = startTime.AddDays((int)DayOfWeek.Monday - (int)startTime.DayOfWeek);
+                stopTime = startTime.AddDays(7);
+                while (stopTime < DateTime.Now) {
+                    data = null;
 
-            startTime = d.GetFirstDate();
-            startTime = startTime.AddDays((int)DayOfWeek.Monday - (int)startTime.DayOfWeek );
-            stopTime = startTime.AddDays(7);
-            while (stopTime < DateTime.Now) {
-                data = null;
+                    foreach (Chart c in exportCharts) {
+                        string fname = String.Format("Weekly {0} {1} w {2}.png", c.Titles[0].Text, startTime.Year, cal.GetWeekOfYear(startTime, CalendarWeekRule.FirstFullWeek, DayOfWeek.Monday));
+                        string fullPath = Path.Combine(plotPath, fname);
 
-                foreach (Chart c in exportCharts) {
-                    string fname = String.Format("Weekly {0} {1} w {2}.png", c.Titles[0].Text, startTime.Year, cal.GetWeekOfYear(startTime, CalendarWeekRule.FirstFullWeek, DayOfWeek.Monday));
-                    string fullPath = Path.Combine(plotPath, fname);
+                        if (File.Exists(fullPath))
+                            continue;
 
-                    if (File.Exists(fullPath))
-                        continue;
+                        if (data == null)
+                            data = GetData(startTime, stopTime, true, true);
 
-                    if(data == null)
-                        data = GetData(startTime, stopTime, true, true);
+                        BindChart(data, c, true, false);
+                        c.SaveImage(fullPath, ChartImageFormat.Png);
+                    }
 
-                    BindChart(data, c, true, false);
-                    c.SaveImage(fullPath, ChartImageFormat.Png);
+                    startTime = stopTime;
+                    stopTime = stopTime.AddDays(7);
                 }
 
-                startTime = stopTime;
-                stopTime = stopTime.AddDays(7);
-            }
+                // Daily plots
+                startTime = d.GetFirstDate();
+                stopTime = startTime.AddDays(1);
 
-            // Daily plots
-            startTime = d.GetFirstDate();
-            stopTime = startTime.AddDays(1);
+                while (stopTime < DateTime.Now) {
+                    data = null;
 
-            while (stopTime < DateTime.Now) {
-                data = null;
+                    foreach (Chart c in exportCharts) {
+                        string fname = String.Format("Daily {0} {1}-{2}-{3}.png", c.Titles[0].Text, startTime.Year, startTime.Month, startTime.Day);
+                        string fullPath = Path.Combine(plotPath, fname);
 
-                foreach (Chart c in exportCharts) {
-                    string fname = String.Format("Daily {0} {1}-{2}-{3}.png", c.Titles[0].Text, startTime.Year, startTime.Month, startTime.Day);
-                    string fullPath = Path.Combine(plotPath, fname);
+                        if (File.Exists(fullPath))
+                            continue;
 
-                    if (File.Exists(fullPath))
-                        continue;
+                        if (data == null)
+                            data = GetData(startTime, stopTime, true, true);
 
-                    if (data == null)
-                        data = GetData(startTime, stopTime, true, true);
+                        BindChart(data, c, true, false);
+                        c.SaveImage(fullPath, ChartImageFormat.Png);
+                    }
 
-                    BindChart(data, c, true, false);
-                    c.SaveImage(fullPath, ChartImageFormat.Png);
+                    startTime = stopTime;
+                    stopTime = stopTime.AddDays(1);
                 }
-
-                startTime = stopTime;
-                stopTime = stopTime.AddDays(1);
             }
 
             // Current Monthly, weekly and Daily plots

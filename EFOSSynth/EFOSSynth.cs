@@ -20,6 +20,7 @@ namespace EFOSSynth
             IniData iniData = parser.ReadFile("EFOS.ini");
 
             string com = iniData["EfosSynth"]["com-port"];
+            StreamWriter log = new StreamWriter(iniData["EfosSynth"]["log-file"], true);
 
             SerialPort efos = new SerialPort(com, 9600);
 
@@ -50,15 +51,16 @@ namespace EFOSSynth
             const double f = 1420405751.00;
             double curSynth = 5751.689;
             double newSynth = curSynth;
-
+            double fDelta = 0;
             void ShowFrqOffset()
             {
                 newSynth = double.Parse(new string(digits));
                 newSynth /= 100000;
                 newSynth += 5700;
 
+                fDelta = (curSynth - newSynth) / f;
                 Console.SetCursorPosition(0, 2);
-                Console.Write("Frequency offset:     {0} Hz       ", ((curSynth - newSynth) / f).ToString(" 0.000E+00;-0.000E+00"));
+                Console.Write("Frequency offset:     {0}        ", fDelta.ToString("+0.000E+00;-0.000E+00"));
                 Console.SetCursorPosition(curPos, 1);
             }
 
@@ -104,7 +106,7 @@ namespace EFOSSynth
             char digit;
 
             getCurrentSynth();
-			
+
 			Console.Clear();
             ShowPrompt();
             Console.SetCursorPosition(curPos, 1);
@@ -156,11 +158,15 @@ namespace EFOSSynth
                         efos.Write(sendBuffer);
                         readBuffer = efos.ReadLine();
 
+                        log.WriteLine("{0} {1} -> {2} ({3})", DateTime.Now, curSynth.ToString("0000.00000"), newSynth.ToString("0000.00000"), fDelta.ToString("+0.000E+00;-0.000E+00"));
+                        log.Flush();
+
                         getCurrentSynth();
 
                         Console.Clear();
                         ShowPrompt();
                         Console.SetCursorPosition(curPos, 1);
+
 
                         break;
 
