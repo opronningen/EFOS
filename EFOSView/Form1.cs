@@ -93,7 +93,7 @@ namespace EFOSView {
                 doneCopyingCharts.WaitOne();
             }
 
-            var data = GetData(DateTime.Now.AddHours(-span), DateTime.UtcNow, true);
+            var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.UtcNow, true);
             BindData(data, true);
 
             fileSystemWatcher1.Path = logPath;
@@ -299,7 +299,7 @@ namespace EFOSView {
                 trackingMode = true;
 
                 // TODO: detect if correct data is already displayed. If so do not reload data
-                var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.Now, true);
+                var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.UtcNow, true);
                 BindData(data, true);
 
                 return;
@@ -479,7 +479,7 @@ namespace EFOSView {
             //}
 
             // bind new data..
-            var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.Now, true);
+            var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.UtcNow, true);
             BindData(data, true);
 
             fileSystemWatcher1.EnableRaisingEvents = true;

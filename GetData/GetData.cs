@@ -97,7 +97,7 @@ GetData (-t <hours>|-b <begin> [-e <end>]) -i (<folder>|<file>) [-f <format>] [-
                 Usage();
 
             // Set defaults
-            opts.EndTime = DateTime.Now;
+            opts.EndTime = DateTime.UtcNow;
 
             //
             // Parse cmd-line options

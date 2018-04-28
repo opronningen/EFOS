@@ -155,7 +155,7 @@ namespace EFOSView {
             }
 
             // Weekly plots
-            stopTime = DateTime.Now;
+            stopTime = DateTime.UtcNow;
             startTime = stopTime.AddDays(-7);
 
             data = GetData(startTime, stopTime, true, true);
