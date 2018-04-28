@@ -64,7 +64,7 @@ namespace EFOSView {
 
                 // Monthly plots
                 
-                while (stopTime < DateTime.Now) {
+                while (stopTime < DateTime.UtcNow) {
                     data = null;
 
                     foreach (Chart c in exportCharts) {
@@ -91,7 +91,7 @@ namespace EFOSView {
                 startTime = d.GetFirstDate();
                 startTime = startTime.AddDays((int)DayOfWeek.Monday - (int)startTime.DayOfWeek);
                 stopTime = startTime.AddDays(7);
-                while (stopTime < DateTime.Now) {
+                while (stopTime < DateTime.UtcNow) {
                     data = null;
 
                     foreach (Chart c in exportCharts) {
@@ -116,7 +116,7 @@ namespace EFOSView {
                 startTime = d.GetFirstDate();
                 stopTime = startTime.AddDays(1);
 
-                while (stopTime < DateTime.Now) {
+                while (stopTime < DateTime.UtcNow) {
                     data = null;
 
                     foreach (Chart c in exportCharts) {
@@ -141,7 +141,7 @@ namespace EFOSView {
             // Current Monthly, weekly and Daily plots
 
             // Monthly plots
-            stopTime = DateTime.Now;
+            stopTime = DateTime.UtcNow;
             startTime = stopTime.AddMonths(-1);
 
             data = GetData(startTime, stopTime, true, true);
@@ -169,7 +169,7 @@ namespace EFOSView {
             }
 
             //Daily plots
-            stopTime = DateTime.Now;
+            stopTime = DateTime.UtcNow;
             startTime = stopTime.AddDays(-1);
 
             data = GetData(startTime, stopTime, true, true);

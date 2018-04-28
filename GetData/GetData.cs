@@ -84,7 +84,7 @@ GetData (-t <hours>|-b <begin> [-e <end>]) -i (<folder>|<file>) [-f <format>] [-
 
                     Console.WriteLine(line);
                 } catch (Exception e) {
-                    Console.Error.WriteLine("{0} Exception: {1}", DateTime.Now, e.ToString());
+                    Console.Error.WriteLine("{0} Exception: {1}", DateTime.UtcNow, e.ToString());
                 }
             }
 
@@ -131,8 +131,8 @@ GetData (-t <hours>|-b <begin> [-e <end>]) -i (<folder>|<file>) [-f <format>] [-
 
                     case "-t":
                         int hours = int.Parse(args[++argPtr]);
-                        opts.StartTime = DateTime.Now.AddHours(-hours);
-                        opts.EndTime = DateTime.Now;
+                        opts.StartTime = DateTime.UtcNow.AddHours(-hours);
+                        opts.EndTime = DateTime.UtcNow;
                         break;
 
                     case "-f":

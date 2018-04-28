@@ -74,7 +74,7 @@ namespace EFOSView {
                 }
             }
 
-            statusLabel.Text = string.Format("Updated {0}", DateTime.Now.ToLongTimeString());
+            statusLabel.Text = string.Format("Updated {0}", DateTime.UtcNow.ToLongTimeString());
 
             var parser = new FileIniDataParser();
             IniData iniData = parser.ReadFile("EFOS.ini");
@@ -93,7 +93,7 @@ namespace EFOSView {
                 doneCopyingCharts.WaitOne();
             }
 
-            var data = GetData(DateTime.Now.AddHours(-span), DateTime.Now, true);
+            var data = GetData(DateTime.Now.AddHours(-span), DateTime.UtcNow, true);
             BindData(data, true);
 
             fileSystemWatcher1.Path = logPath;
@@ -118,7 +118,7 @@ namespace EFOSView {
                         s.Points.RemoveAt(0);
                 } else if (tracking) {
                     // If we are in trackingMode, remove older data
-                    double oldest = DateTime.Now.AddHours(-span).ToOADate();
+                    double oldest = DateTime.UtcNow.AddHours(-span).ToOADate();
 
                     while (s.Points.Count != 0 && s.Points[0].XValue < oldest)
                         s.Points.RemoveAt(0);
@@ -271,9 +271,9 @@ namespace EFOSView {
                 return;
 
             // Ask for all data newer than the last point in any of the series.
-            List<EFOSDataPoint> data = GetData(DateTime.FromOADate(HydrogenChart.Series[0].Points.Last().XValue), DateTime.Now, false);
+            List<EFOSDataPoint> data = GetData(DateTime.FromOADate(HydrogenChart.Series[0].Points.Last().XValue), DateTime.UtcNow, false);
 
-            string msg = string.Format("Updated {0}", DateTime.Now.ToLongTimeString());
+            string msg = string.Format("Updated {0}", DateTime.UtcNow.ToLongTimeString());
             Invoke((MethodInvoker)delegate {
                 BindData(data, false);
                 statusLabel.Text = msg;
@@ -299,7 +299,7 @@ namespace EFOSView {
                 trackingMode = true;
 
                 // TODO: detect if correct data is already displayed. If so do not reload data
-                var data = GetData(DateTime.Now.AddHours(-span), DateTime.Now, true);
+                var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.Now, true);
                 BindData(data, true);
 
                 return;
@@ -479,7 +479,7 @@ namespace EFOSView {
             //}
 
             // bind new data..
-            var data = GetData(DateTime.Now.AddHours(-span), DateTime.Now, true);
+            var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.Now, true);
             BindData(data, true);
 
             fileSystemWatcher1.EnableRaisingEvents = true;

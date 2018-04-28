@@ -187,7 +187,7 @@ namespace EFOSView {
         public DateTime GetFirstDate() {
             string[] files = Directory.EnumerateFiles(path, "EFOS3 20*.csv").ToArray();
             if (files.Length == 0)
-                return DateTime.Now;
+                return DateTime.UtcNow;
 
             Array.Sort(files);
             return DateTime.Parse(files[0].Substring(files[0].Length - 14, 10));

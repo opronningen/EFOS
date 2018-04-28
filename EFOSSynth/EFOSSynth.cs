@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO.Ports;
 using System.IO;
 using IniParser;
@@ -26,64 +22,31 @@ namespace EFOSSynth
 
             int curPos = 32;            // Cursor-position
             const int minCurPos = 25;   // "Left-most" valid position
-            const int maxCurPos = 32;   // Right-most valid postion
+            const int maxCurPos = 32;   // "Right-most" valid postion
             const int dotPos = 27;
+            double multiplier = 1E-5;
             string readBuffer;
             string sendBuffer;
-
-            char[] digits;
-
-            int CursorPosToIndex(int cursorPos)
-            {
-                if (cursorPos >= dotPos)
-                    return (cursorPos - minCurPos - 1);
-                else
-                    return (cursorPos - minCurPos);
-            }
-
-            void ShowPrompt()
-            {
-                Console.WriteLine("Current Synth setting: 57{0}.{1}", readBuffer.Substring(0, 2), readBuffer.Substring(2, 5));
-                Console.WriteLine("New Synth setting:     57{0}.{1}", readBuffer.Substring(0, 2), readBuffer.Substring(2, 5));
-                ShowFrqOffset();
-            }
 
             const double f = 1420405751.00;
             double curSynth = 5751.689;
             double newSynth = curSynth;
             double fDelta = 0;
+
+            void ShowPrompt()
+            {
+                Console.Clear();
+                Console.WriteLine("Current Synth setting: {0:F5}", curSynth);
+                Console.WriteLine("New Synth setting:     {0:F5}", newSynth);
+                Console.SetCursorPosition(0, 2);
+                ShowFrqOffset();
+                Console.SetCursorPosition(curPos, 1);
+            }
+
             void ShowFrqOffset()
             {
-                newSynth = double.Parse(new string(digits));
-                newSynth /= 100000;
-                newSynth += 5700;
-
                 fDelta = (curSynth - newSynth) / f;
-                Console.SetCursorPosition(0, 2);
                 Console.Write("Frequency offset:     {0}        ", fDelta.ToString("+0.000E+00;-0.000E+00"));
-                Console.SetCursorPosition(curPos, 1);
-            }
-
-            void cursorLeft()
-            {
-                curPos--;
-                if (curPos < minCurPos)
-                    curPos = minCurPos;
-                else if (curPos == dotPos)
-                    curPos--;
-
-                Console.SetCursorPosition(curPos, 1);
-            }
-
-            void cursorRight()
-            {
-                curPos++;
-                if (curPos > maxCurPos)
-                    curPos = maxCurPos;
-                else if (curPos == dotPos)
-                    curPos++;
-
-                Console.SetCursorPosition(curPos, 1);
             }
 
             void getCurrentSynth()
@@ -99,85 +62,94 @@ namespace EFOSSynth
                 curSynth /= 100000;
                 curSynth += 5700;
 
-                digits = readBuffer.ToCharArray();
             }
 
-            int index;
-            char digit;
+            void setSynth()
+            {
+                if (!efos.IsOpen)
+                    efos.Open();
+
+                sendBuffer = ((Double)((newSynth - 5700) * 1e5)).ToString("0000000");
+                efos.Write(sendBuffer);
+                readBuffer = efos.ReadLine();
+
+                //log.WriteLine("{0} {1} -> {2} ({3}) (sendbuffer: {4}, readbuffer: {5})", DateTime.Now, curSynth.ToString("0000.00000"), newSynth.ToString("0000.00000"), fDelta.ToString("+0.000E+00;-0.000E+00"), sendBuffer.Trim(), readBuffer.Trim());
+                log.WriteLine("{0} {1} -> {2} ({3})", DateTime.UtcNow, curSynth.ToString("0000.00000"), newSynth.ToString("0000.00000"), fDelta.ToString("+0.000E+00;-0.000E+00"));
+                log.Flush();
+            }
 
             getCurrentSynth();
+            newSynth = curSynth;
 
-			Console.Clear();
+            // If given an argument, interpret as counts of least possible steps. Set synthesizer and return
+            if(args.Length == 1)
+            {
+                int count = int.Parse(args[0]);
+                newSynth += count*1e-5;
+                ShowFrqOffset();
+                setSynth();
+
+                return;
+            }
+
             ShowPrompt();
-            Console.SetCursorPosition(curPos, 1);
 
             while (true) {
                 
                 ConsoleKeyInfo c = Console.ReadKey(true);
                 switch (c.Key) {
                     case ConsoleKey.UpArrow:
-                        index = CursorPosToIndex(curPos);
-                        digit = digits[index];
-                        digit++;
-                        if (digit > '9')
-                            digit = '0';
+                        newSynth += multiplier;
 
-                        digits[index] = digit;
+                        ShowPrompt();
 
-                        Console.Write(digit);
-                        ShowFrqOffset();
                         break;
 
                     case ConsoleKey.DownArrow:
-                        index = CursorPosToIndex(curPos);
-                        digit = digits[index];
-                        digit--;
-                        if (digit < '0')
-                            digit = '9';
+                        newSynth -= multiplier;
 
-                        digits[index] = digit;
+                        ShowPrompt();
 
-                        Console.Write(digit);
-                        ShowFrqOffset();
                         break;
 
                     case ConsoleKey.LeftArrow:
-                        cursorLeft();
+                        curPos--;
+                        if (curPos < minCurPos)
+                            curPos = minCurPos;
+                        else
+                        {
+                            if (curPos == dotPos)
+                                curPos--;
+
+                            multiplier *= 10;
+                        }
+
+                        Console.SetCursorPosition(curPos, 1);
+
                         break;
 
                     case ConsoleKey.RightArrow:
-                        cursorRight();
+                        curPos++;
+                        if (curPos > maxCurPos)
+                            curPos = maxCurPos;
+                        else
+                        {
+                            if (curPos == dotPos)
+                                curPos++;
+
+                            multiplier /= 10;
+                        }
+
+                        Console.SetCursorPosition(curPos, 1);
+
                         break;
 
                     case ConsoleKey.Enter:
-                        sendBuffer = new string(digits);
 
-                        if (!efos.IsOpen)
-                            efos.Open();
-
-                        efos.Write(sendBuffer);
-                        readBuffer = efos.ReadLine();
-
-                        log.WriteLine("{0} {1} -> {2} ({3})", DateTime.Now, curSynth.ToString("0000.00000"), newSynth.ToString("0000.00000"), fDelta.ToString("+0.000E+00;-0.000E+00"));
-                        log.Flush();
-
+                        setSynth();
                         getCurrentSynth();
-
-                        Console.Clear();
+                        newSynth = curSynth;
                         ShowPrompt();
-                        Console.SetCursorPosition(curPos, 1);
-
-
-                        break;
-
-                    default:
-                        char chr = c.KeyChar;
-                        if (chr >= '0' && chr <= '9') {
-                            Console.Write(chr);
-                            digits[CursorPosToIndex(curPos)] = chr;
-                            cursorRight();
-                            ShowFrqOffset();
-                        }
 
                         break;
                 }

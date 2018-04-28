@@ -166,7 +166,7 @@ namespace EfosMon {
         #endregion
 
         StreamWriter OpenLogFile() {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             logfiledate = now.Date;
             string filename = String.Format("efos3 {0}.{1,1:D2}.{2,1:D2}.csv", now.Year, now.Month, now.Day);
@@ -249,14 +249,14 @@ namespace EfosMon {
 
                             values[i] = val;
                         } catch (Exception) {
-                            errlog.WriteLine("{0} Parse error {1}: Sent {2}, received {3}", DateTime.Now, names[i].Trim(), queries[i], readBuffer);
+                            errlog.WriteLine("{0} Parse error {1}: Sent {2}, received {3}", DateTime.UtcNow, names[i].Trim(), queries[i], readBuffer);
 
                             // Leave old value unchanged, flag error on console
                             parseErrors[i] = true;
                         }
                     }
 
-                    DateTime now = DateTime.Now;
+                    DateTime now = DateTime.UtcNow;
                     if (now.Date != logfiledate) {
                         if (log != null) {
                             log.Close();
