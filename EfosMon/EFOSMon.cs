@@ -31,8 +31,8 @@ namespace EfosMon {
             "D15",
             "D16",
             "D17",
-//            "D18",
-//            "D19",
+            "D18",
+            "D19",
             "D20",
             "D21",
             "D22",
@@ -69,10 +69,10 @@ namespace EfosMon {
             "T (ambient) [C]     ",
             "Cavity var. [V]     ",
             "C field [uA]        ",
- //           "int. N°2 HT U [kV]  ",
- //           "int. N°2 HT I [µA]  ",
-            "Int. Vac U [kV]     ",
-            "Int. Vac I [uA]     ",
+            "int. Vac 2 U [kV]   ",
+            "int. Vac 2 I [µA]   ",
+            "Int. Vac 1 U [kV]   ",
+            "Int. Vac 1 I [uA]   ",
             "Ext. Vac U [kV]     ",
             "Ext. Vac I [uA]     ",
             "RF U [V]            ",
@@ -107,8 +107,8 @@ namespace EfosMon {
             0.096,
             0.096,
             1.920,
-//            0.048,
-//            19.00,
+            0.048,
+            19.00,
             0.048,
             19.00,
             0.048,
@@ -144,8 +144,8 @@ namespace EfosMon {
             0,
             26,
             0,
-//            0,
-//            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -169,7 +169,7 @@ namespace EfosMon {
             DateTime now = DateTime.UtcNow;
 
             logfiledate = now.Date;
-            string filename = String.Format("efos3 {0}.{1,1:D2}.{2,1:D2}.csv", now.Year, now.Month, now.Day);
+            string filename = String.Format("{0} {1}.{2,1:D2}.{3,1:D2}.csv", logfilePrefix, now.Year, now.Month, now.Day);
             logfilename = Path.Combine(logPath, filename);
 
             bool writeHeaders = false;
@@ -177,9 +177,6 @@ namespace EfosMon {
             FileInfo f = new FileInfo(logfilename);
             if (!f.Exists)
                 writeHeaders = true;
-
-            //if (!File.Exists(logfilename));  // Todo Returns false even when file exist.
-            //    writeHeaders = false;
 
             var logf = File.Open(logfilename, FileMode.Append, FileAccess.Write, FileShare.Read);
             StreamWriter log = new StreamWriter(logf, Encoding.ASCII);
@@ -216,6 +213,7 @@ namespace EfosMon {
         // Represent the current logfile
         DateTime logfiledate;
         string logfilename;
+        public string logfilePrefix;
         public string logPath="";
 
         public static object executionLock = new object();
@@ -241,7 +239,7 @@ namespace EfosMon {
                         try {
                             val = (double)int.Parse(value, System.Globalization.NumberStyles.HexNumber);
 
-                            if (i < 30)
+                            if (i < 32)
                                 val -= 128;
 
                             val *= scale[i];
@@ -338,9 +336,11 @@ namespace EfosMon {
 
             string com = iniData["EfosMon"]["com-port"];
             string logPath = iniData["EfosMon"]["data-path"];
+            string prefix = iniData["EfosMon"]["filename-prefix"];
 
             poller = new EFOSpoller(com);
-            
+            poller.logfilePrefix = prefix; 
+
             if (!Directory.Exists(logPath)) {
                 Console.Error.WriteLine("Error! Could not open LogDirectory {0}. Using .\\", logPath);
             }else {
