@@ -36,6 +36,8 @@ namespace EFOSView {
         Tamb,
         CavVar,
         Cfield,
+        IntVac2V,
+        IntVac2A,
         IntVacV,
         IntVacA,
         ExtVacV,
@@ -61,6 +63,7 @@ namespace EFOSView {
 
     class DataLoader {
         public string path;
+        public string filenames;
 
         /*
          * Used to signal the loader that new data is available. Add newly acquired data to the global dataset.
@@ -76,7 +79,7 @@ namespace EFOSView {
         public List<EFOSDataPoint> LoadData(DateTime from, DateTime to) {
             List<EFOSDataPoint> data = new List<EFOSDataPoint>();
 
-            string[] files = Directory.EnumerateFiles(path, "EFOS3 20*.csv").ToArray();
+            string[] files = Directory.EnumerateFiles(path, filenames).ToArray();
             Array.Sort(files);                                                              // Sort from oldest to newest
 
             // Need to strip off hour:in:sec from "from", in order to load the file containing that data.
@@ -174,7 +177,7 @@ namespace EFOSView {
             // The last point read may be corrupted, as another process is writing to the file. Try to detect, and discard.
             if (data.Count > 0) {
                 EFOSDataPoint last = data.Last();
-                while (data.Count > 0 && last.values.Length != 33) {
+                while (data.Count > 0 && last.values.Length != 35) {
                     data.Remove(last);
                     last = data.Last();
                 }

@@ -29,6 +29,7 @@ namespace EFOSView {
 
         private string logPath;
         private string plotPath;
+        private string logfilePrefix;
         private bool exportPlots = false;
         private bool exportHistoricPlots = false;
 
@@ -80,24 +81,26 @@ namespace EFOSView {
             IniData iniData = parser.ReadFile("EFOS.ini");
             plotPath = iniData["EfosView"]["plot-path"];
             logPath = iniData["EfosMon"]["data-path"];
+            logfilePrefix = iniData["EfosMon"]["filename-prefix"];
             exportPlots = bool.Parse(iniData["EfosView"]["export-plots"]);
             exportHistoricPlots = bool.Parse(iniData["EfosView"]["export-historic-plots"]);
 
             d = new DataLoader(logPath);
+            d.filenames = String.Format("{0} 20*.csv", logfilePrefix);
 
             // Run exportcharts in the background
-            if (exportPlots) {
-                Task.Run(() => ExportCharts());
+            //if (exportPlots) {
+            //    Task.Run(() => ExportCharts());
 
-                // Wait untill ExportCharts has copied the charts
-                doneCopyingCharts.WaitOne();
-            }
+            //    // Wait untill ExportCharts has copied the charts
+            //    doneCopyingCharts.WaitOne();
+            //}
 
             var data = GetData(DateTime.UtcNow.AddHours(-span), DateTime.UtcNow, true);
             BindData(data, true);
 
             fileSystemWatcher1.Path = logPath;
-
+            fileSystemWatcher1.Filter = d.filenames;
             fileSystemWatcher1.EnableRaisingEvents = true;
         }
 
@@ -280,9 +283,9 @@ namespace EFOSView {
             });
 
             // Run exportcharts in the background
-            if (exportPlots) {
-                Task.Run(() => ExportCharts());
-            }
+            //if (exportPlots) {
+            //    Task.Run(() => ExportCharts());
+            //}
         }
 
         /*

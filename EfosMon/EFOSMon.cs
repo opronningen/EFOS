@@ -238,7 +238,7 @@ namespace EfosMon {
 
                         try {
                             val = (double)int.Parse(value, System.Globalization.NumberStyles.HexNumber);
-
+                            
                             if (i < 32)
                                 val -= 128;
 
@@ -295,7 +295,7 @@ namespace EfosMon {
         private bool disposed = false;
 
         public EFOSpoller(string comPort) {
-            efos = new SerialPort(comPort, 9600);
+            efos = new SerialPort(comPort, 9600, Parity.None, 8, StopBits.One);
             efos.Open();
 
             errlog.AutoFlush = true;
